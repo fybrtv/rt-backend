@@ -53,7 +53,12 @@ app.use(function(err, req, res, next) {
     });
 });
 
-var server = app.listen(6060);
+var server = app.listen(6060, function () {
+  var host = server.address().address;
+  var port = server.address().port;
+  console.log('Fybr server at http://%s:%s', host, port);
+  //addToTimeline(83,'553c4755594c6adaa7ad79e3');
+})
 var amas = io.of('/ama');
 var usernames = {};
 var rooms = ['Lobby'];
