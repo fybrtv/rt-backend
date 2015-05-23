@@ -6,7 +6,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
-
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var app = express();
 
 // view engine setup
@@ -53,12 +54,24 @@ app.use(function(err, req, res, next) {
 });
 
 var server = app.listen(6060);
-var io = require('socket.io').listen(server);
+var amas = io.of('/ama');
+var usernames = {};
+var rooms = ['Lobby'];
 
-io.sockets.on('connection', function(socket){
-    socket.on('init', function(){ 
-        socket.emit("message");
-    });
+amas.on('connection', function(socket){
+    socket.on('creatorInit', function(data){
+        socket.join(data.creatorId)
+    })
+    socket.on('init', function(data){
+        socket.join(data.channelId)
+    })
+    socket.on('question', function(data){
+      io.to(data.creatorId).emit(data.question);
+    })
+    socket.on('answer', function(data){
+      socket.broadcast.to(data.channelId).emit('newAnswer', { question: data.question, answer: data.answer} );
+    })
 });
+
 
 module.exports = app;
