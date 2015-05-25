@@ -17,7 +17,6 @@ amas.on('connection', function(socket){
   })
   socket.on('question', function(data){
     console.log('question asked ', data );
-    amas.to(data.creatorId).emit('newQuestion', data.question);
     request.post({
                 url:'http://0.0.0.0:5000/questions', 
                 form: {askerId:data.askerId, seriesId: data.seriesId, question: data.question}
@@ -25,13 +24,16 @@ amas.on('connection', function(socket){
                 function(err,httpResponse,body){ 
                     if(err) console.log(err);
                     else{
-                      console.log(body);
+                      console.log('new question saved', body);
+                      console.log(JSON.parse(body).id);
+                      amas.to(data.creatorId).emit('newQuestion', {question: data.question, questionId: JSON.parse(body).id});
                     }
                 }
     );
   })
   socket.on('answer', function(data){
     socket.broadcast.to(data.seriesId).emit('newAnswer', { question: data.question, answer: data.answer} );
+    console.log(data);
     request.post({
                 url:'http://0.0.0.0:5000/questionsUpdate/' + data.questionId, 
                 form: {answer:data.answer}
